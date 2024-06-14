@@ -1,5 +1,5 @@
-from pathlib import Path
 from os import getenv
+from pathlib import Path
 from urllib.parse import urlencode
 
 from dotenv import load_dotenv
@@ -14,6 +14,7 @@ RSS_BRIDGE_URL = getenv("RSS_BRIDGE_URL")
 ENCODING = "UTF-8"
 DOWNLOAD_API_URL = getenv("DOWNLOAD_API_URL")
 VIDEO_FILENAME = getenv("VIDEO_FILENAME", "video_file.mp4")
+FFMPEG_DIRECTORY = getenv("FFMPEG_DIRECTORY", "/ffmpeg/")
 
 app = FastAPI()
 
@@ -45,6 +46,7 @@ def insert_media(xml: bytes) -> str:
 @app.get("/download")
 def download(video_url: str):
     Path(VIDEO_FILENAME).unlink(missing_ok=True)
-    with YoutubeDL({"outtmpl": VIDEO_FILENAME}) as ytdl:
+    yt_dlp_params = {"outtmpl": VIDEO_FILENAME, "ffmpeg_location": FFMPEG_DIRECTORY}
+    with YoutubeDL(yt_dlp_params) as ytdl:
         ytdl.download(video_url)
     return FileResponse(VIDEO_FILENAME)
