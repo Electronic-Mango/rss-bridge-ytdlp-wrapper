@@ -14,6 +14,7 @@ load_dotenv()
 RSS_BRIDGE_URL = getenv("RSS_BRIDGE_URL")
 ENCODING = "UTF-8"
 DOWNLOAD_API_URL = getenv("DOWNLOAD_API_URL")
+DEFAULT_MEDIA_NAMESPACE = getenv("DEFAULT_MEDIA_NAMESPACE", "http://search.yahoo.com/mrss/")
 VIDEO_FILENAME = str(uuid4())
 
 app = FastAPI()
@@ -35,11 +36,11 @@ def rss(request: Request):
 
 def insert_media(xml: bytes) -> str:
     tree = fromstring(xml)
+    media_namespace = (tree.nsmap or {}).get("media", DEFAULT_MEDIA_NAMESPACE)
     for item in tree.xpath("//item"):
-        media_content = SubElement(item, "media_content")
-        media_url = SubElement(media_content, "url")
         media_url_query = urlencode({"video_url": item.find("link").text})
-        media_url.text = f"{DOWNLOAD_API_URL}/download?{media_url_query}"
+        media_url = f"{DOWNLOAD_API_URL}/download?{media_url_query}"
+        SubElement(item, f"{{{media_namespace}}}content", {"url": media_url})
     return tostring(tree, xml_declaration=True, pretty_print=True, encoding=ENCODING)
 
 
