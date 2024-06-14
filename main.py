@@ -44,7 +44,7 @@ def insert_media(xml: bytes) -> str:
 
 @app.get("/download")
 def download(video_url: str):
-    Path(VIDEO_FILENAME).unlink()
+    Path(VIDEO_FILENAME).unlink(missing_ok=True)
     with YoutubeDL({"outtmpl": VIDEO_FILENAME}) as ytdl:
         ytdl.download(video_url)
     return FileResponse(VIDEO_FILENAME)
