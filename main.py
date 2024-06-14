@@ -1,3 +1,4 @@
+from pathlib import Path
 from os import getenv
 from urllib.parse import urlencode
 
@@ -43,6 +44,7 @@ def insert_media(xml: bytes) -> str:
 
 @app.get("/download")
 def download(video_url: str):
+    Path(VIDEO_FILENAME).unlink()
     with YoutubeDL({"outtmpl": VIDEO_FILENAME}) as ytdl:
         ytdl.download(video_url)
     return FileResponse(VIDEO_FILENAME)
