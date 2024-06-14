@@ -15,7 +15,6 @@ RSS_BRIDGE_URL = getenv("RSS_BRIDGE_URL")
 ENCODING = "UTF-8"
 DOWNLOAD_API_URL = getenv("DOWNLOAD_API_URL")
 VIDEO_FILENAME = str(uuid4())
-FFMPEG_DIRECTORY = getenv("FFMPEG_DIRECTORY", "/ffmpeg/")
 
 app = FastAPI()
 
@@ -47,8 +46,7 @@ def insert_media(xml: bytes) -> str:
 @app.get("/download")
 def download(video_url: str):
     remove_old_video_file()
-    yt_dlp_params = {"outtmpl": VIDEO_FILENAME, "ffmpeg_location": FFMPEG_DIRECTORY}
-    with YoutubeDL(yt_dlp_params) as ytdl:
+    with YoutubeDL({"outtmpl": VIDEO_FILENAME}) as ytdl:
         ytdl.download(video_url)
     return FileResponse(find_video_filename())
 
