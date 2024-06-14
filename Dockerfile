@@ -5,6 +5,7 @@ RUN apk add xz
 RUN tar --xz -xvf ffmpeg-master-latest-linuxarm64-gpl.tar.xz ffmpeg-master-latest-linuxarm64-gpl/bin/
 RUN mv ffmpeg-master-latest-linuxarm64-gpl/bin/ ffmpeg/
 RUN rm -rf ffmpeg-*
+RUN ln -s /ffmpeg/ff* /usr/local/bin/
 
 WORKDIR /app
 
