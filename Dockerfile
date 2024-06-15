@@ -9,5 +9,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY main.py .
 
-ENTRYPOINT ["fastapi"]
-CMD ["run", "main.py", "--host", "0.0.0.0"]
+ENTRYPOINT ["uvicorn", "main:app"]
+CMD ["--host", "0.0.0.0"]
