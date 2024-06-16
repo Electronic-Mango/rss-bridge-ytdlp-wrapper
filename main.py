@@ -47,7 +47,7 @@ def insert_media(xml: bytes) -> str:
 @app.get("/download")
 def download(video_url: str):
     remove_old_video_file()
-    with YoutubeDL({"outtmpl": VIDEO_FILENAME}) as ytdl:
+    with YoutubeDL({"outtmpl": f"{VIDEO_FILENAME}.%(ext)s"}) as ytdl:
         ytdl.download(video_url)
     return FileResponse(find_video_filename())
 
