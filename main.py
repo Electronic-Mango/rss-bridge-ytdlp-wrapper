@@ -7,30 +7,33 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, PlainTextResponse
 from httpx import get
-from lxml.etree import SubElement, fromstring, tostring
+from lxml.etree import SubElement, fromstring, strip_elements, tostring
 from yt_dlp import YoutubeDL
 
 load_dotenv()
 RSS_BRIDGE_URL = getenv("RSS_BRIDGE_URL")
-ENCODING = "UTF-8"
 DOWNLOAD_API_URL = getenv("DOWNLOAD_API_URL")
 DEFAULT_MEDIA_NAMESPACE = getenv("DEFAULT_MEDIA_NAMESPACE", "http://search.yahoo.com/mrss/")
+ENCODING = "UTF-8"
 VIDEO_FILENAME = str(uuid4())
 
 app = FastAPI()
 
 
 @app.get("/rss")
-def rss(request: Request):
+def rss(request: Request, remove_existing_media: bool = False):
     params = dict(request.query_params) | {"format": "Mrss"}
-    rss_bridge_response = get(RSS_BRIDGE_URL, params=params)
-    extended_response = insert_media(rss_bridge_response.text.encode(ENCODING))
+    params.pop("remove_existing_media", None)
+    bridge_response = get(RSS_BRIDGE_URL, params=params)
+    extended_response = insert_media(bridge_response.text.encode(ENCODING), remove_existing_media)
     return PlainTextResponse(extended_response)
 
 
-def insert_media(xml: bytes) -> str:
+def insert_media(xml: bytes, remove_existing_media: bool) -> str:
     tree = fromstring(xml)
     media_namespace = (tree.nsmap or {}).get("media", DEFAULT_MEDIA_NAMESPACE)
+    if remove_existing_media:
+        strip_elements(tree, f"{{{media_namespace}}}content")
     for item in tree.xpath("//item"):
         media_url_query = urlencode({"video_url": item.find("link").text})
         media_url = f"{DOWNLOAD_API_URL}/download?{media_url_query}"
