@@ -22,6 +22,10 @@ When RSS reader tries to download elements from RSS feed it will access this API
 API requires setting `RSS_BRIDGE_URL` environment variable to a URL with working RSS-Bridge.
 This can be done directly, or through `.env` file.
 
+You can control maximum video duration (in seconds) before API responds with just a thumbnail through `DURATION_MAX` environment variable.
+If `DURATION_MAX` is not set, or set to 0 all videos will be downloaded.
+Duration is taken into account only when the API tries to actually download the file, not for initial RSS request.
+
 ### Docker compose
 
 1. Create `.env` file with `RSS_BRIDGE_URL` environment variable set
