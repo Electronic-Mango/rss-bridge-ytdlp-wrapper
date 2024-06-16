@@ -49,11 +49,11 @@ def download(video_url: str):
 
 def remove_old_video_file() -> None:
     for entry in Path(".").iterdir():
-        if entry.is_file() and VIDEO_FILENAME in entry.name:
+        if entry.is_file() and VIDEO_FILENAME == entry.stem:
             entry.unlink(missing_ok=True)
 
 
-def find_video_filename() -> str:
+def find_video_filename() -> Path:
     for entry in Path(".").iterdir():
-        if entry.is_file() and VIDEO_FILENAME in (filename := entry.name):
-            return filename
+        if entry.is_file() and VIDEO_FILENAME == entry.stem:
+            return entry
