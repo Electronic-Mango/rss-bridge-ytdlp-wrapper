@@ -22,13 +22,7 @@ app = FastAPI()
 
 @app.get("/rss")
 def rss(request: Request):
-    params = {
-        "action": "display",
-        "bridge": "YoutubeBridge",
-        "context": "By custom name",
-        "format": "Mrss",
-    }
-    params |= request.query_params
+    params = dict(request.query_params) | {"format": "Mrss"}
     rss_bridge_response = get(RSS_BRIDGE_URL, params=params)
     extended_response = insert_media(rss_bridge_response.text.encode(ENCODING))
     return PlainTextResponse(extended_response)
