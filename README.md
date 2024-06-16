@@ -58,19 +58,19 @@ API has an automatically generated documentation at `docs` or `redoc` endpoints.
 ## Examples
 
 Search for RSS feed through RSS-Bridge and copy all query parameters:
-```http
+```
 https://rss-bridge.org/bridge01/?action=display&bridge=YoutubeBridge&context=By+custom+name&custom=tombates&duration_min=&duration_max=&format=Mrss
 ```
 
 In this case query string is:
-```http
+```
 ?action=display&bridge=YoutubeBridge&context=By+custom+name&custom=tombates&duration_min=&duration_max=&format=Mrss
 ```
 
 Paste it over to `rss` endpoint of this API
 (`format` parameter will be set to `Mrss` in the API, passed value here will be ignored).
 You can also optionally set `remove_existing_media=true` if you want existing media elements to be removed:
-```http
+```
 localhost:8123/rss?action=display&bridge=YoutubeBridge&context=By+custom+name&custom=tombates&duration_min=&duration_max=&format=Mrss
 localhost:8123/rss?action=display&bridge=YoutubeBridge&context=By+custom+name&custom=tombates&duration_min=&duration_max=&format=Mrss&remove_existing_media=true
 ```
