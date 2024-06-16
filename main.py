@@ -11,7 +11,6 @@ from yt_dlp import YoutubeDL
 
 load_dotenv()
 RSS_BRIDGE_URL = getenv("RSS_BRIDGE_URL")
-DEFAULT_MEDIA_NAMESPACE = getenv("DEFAULT_MEDIA_NAMESPACE", "http://search.yahoo.com/mrss/")
 ENCODING = "UTF-8"
 VIDEO_FILENAME = str(uuid4())
 
@@ -31,7 +30,7 @@ def rss(request: Request, remove_existing_media: bool = False):
 def insert_media(xml: bytes, remove_existing_media: bool, base_url: URL) -> str:
     download_url = base_url.replace(path="/download")
     tree = fromstring(xml)
-    media_namespace = (tree.nsmap or {}).get("media", DEFAULT_MEDIA_NAMESPACE)
+    media_namespace = (tree.nsmap or {}).get("media", "http://search.yahoo.com/mrss/")
     if remove_existing_media:
         strip_elements(tree, f"{{{media_namespace}}}content")
     for item in tree.xpath("//item"):
