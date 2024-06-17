@@ -44,10 +44,8 @@ def insert_media(xml: bytes, remove_existing_media: bool, base_url: URL) -> str:
 @app.get("/download")
 def download(video_url: str):
     remove_old_video_file()
-    if video_file := download_video(video_url):
-        return FileResponse(video_file)
-    else:
-        return FileResponse(download_thumbnail(video_url))
+    file = download_video(video_url) or download_thumbnail(video_url)
+    return FileResponse(file)
 
 
 def remove_old_video_file() -> None:
@@ -57,25 +55,19 @@ def remove_old_video_file() -> None:
 
 
 def download_video(video_url: str) -> Path | None:
-    params = prepare_target_params() | prepare_duration_params()
+    params = prepare_target_params()
+    if DURATION_MAX:
+        params["match_filter"] = match_filter_func(f"duration<={DURATION_MAX}")
     return download_file(params, video_url)
 
 
 def download_thumbnail(video_url: str) -> Path | None:
-    params = prepare_target_params() | prepare_thumbnail_params()
+    params = prepare_target_params() | {"writethumbnail": True, "skip_download": True}
     return download_file(params, video_url)
 
 
 def prepare_target_params() -> dict[str, str]:
     return {"outtmpl": f"{DOWNLOADED_FILENAME}.%(ext)s"}
-
-
-def prepare_duration_params() -> dict[str, str]:
-    return {"match_filter": match_filter_func(f"duration<={DURATION_MAX}")} if DURATION_MAX else {}
-
-
-def prepare_thumbnail_params() -> dict[str, bool]:
-    return {"writethumbnail": True, "skip_download": True}
 
 
 def download_file(params: dict[str, Any], video_url: str) -> Path | None:
