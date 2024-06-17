@@ -8,13 +8,13 @@ from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, PlainTextResponse
 from httpx import URL, get
 from lxml.etree import SubElement, fromstring, strip_elements, tostring
+from starlette.background import BackgroundTask
 from yt_dlp import YoutubeDL, match_filter_func
 
 load_dotenv()
 RSS_BRIDGE_URL = getenv("RSS_BRIDGE_URL")
 DURATION_MAX = getenv("DURATION_MAX")
 ENCODING = "UTF-8"
-DOWNLOADED_FILENAME = str(uuid4())
 
 app = FastAPI()
 
@@ -43,41 +43,32 @@ def insert_media(xml: bytes, remove_existing_media: bool, base_url: URL) -> str:
 
 @app.get("/download")
 def download(video_url: str):
-    remove_old_video_file()
-    file = download_video(video_url) or download_thumbnail(video_url)
-    return FileResponse(file)
+    filename = str(uuid4())
+    file = download_video(video_url, filename) or download_thumbnail(video_url, filename)
+    return FileResponse(file, background=BackgroundTask(lambda: file.unlink()))
 
 
-def remove_old_video_file() -> None:
-    for entry in Path(".").iterdir():
-        if entry.is_file() and DOWNLOADED_FILENAME == entry.stem:
-            entry.unlink(missing_ok=True)
-
-
-def download_video(video_url: str) -> Path | None:
-    params = prepare_target_params()
+def download_video(video_url: str, filename: str) -> Path | None:
+    params = prepare_target_params(filename)
     if DURATION_MAX:
         params["match_filter"] = match_filter_func(f"duration<={DURATION_MAX}")
-    return download_file(params, video_url)
+    return download_file(params, video_url, filename)
 
 
-def download_thumbnail(video_url: str) -> Path | None:
-    params = prepare_target_params() | {"writethumbnail": True, "skip_download": True}
-    return download_file(params, video_url)
+def download_thumbnail(video_url: str, filename: str) -> Path | None:
+    params = prepare_target_params(filename) | {"writethumbnail": True, "skip_download": True}
+    return download_file(params, video_url, filename)
 
 
-def prepare_target_params() -> dict[str, str]:
-    return {"outtmpl": f"{DOWNLOADED_FILENAME}.%(ext)s"}
+def prepare_target_params(filename: str) -> dict[str, str]:
+    return {"outtmpl": f"{filename}.%(ext)s"}
 
 
-def download_file(params: dict[str, Any], video_url: str) -> Path | None:
+def download_file(params: dict[str, Any], video_url: str, filename: str) -> Path | None:
     with YoutubeDL(params) as ytdl:
         ytdl.download(video_url)
-    return find_downloaded_file()
+    return find_downloaded_file(filename)
 
 
-def find_downloaded_file() -> Path | None:
-    for entry in Path(".").iterdir():
-        if entry.is_file() and DOWNLOADED_FILENAME == entry.stem:
-            return entry
-    return None
+def find_downloaded_file(filename: str) -> Path | None:
+    return next((e for e in Path().iterdir() if e.is_file() and e.stem == filename), None)
