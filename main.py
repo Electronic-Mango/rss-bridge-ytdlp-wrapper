@@ -14,6 +14,7 @@ from yt_dlp import YoutubeDL, match_filter_func
 load_dotenv()
 RSS_BRIDGE_URL = getenv("RSS_BRIDGE_URL")
 DURATION_MAX = getenv("DURATION_MAX")
+VIDEO_FORMAT = getenv("VIDEO_FORMAT")
 ENCODING = "UTF-8"
 
 app = FastAPI()
@@ -50,6 +51,8 @@ def download(video_url: str):
 
 def download_video(video_url: str, filename: str) -> Path | None:
     params = prepare_target_params(filename)
+    if VIDEO_FORMAT:
+        params["format"] = VIDEO_FORMAT
     if DURATION_MAX:
         params["match_filter"] = match_filter_func(f"duration<={DURATION_MAX}")
     return download_file(params, video_url, filename)

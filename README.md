@@ -26,6 +26,11 @@ You can control maximum video duration (in seconds) before API responds with jus
 If `DURATION_MAX` is not set, or set to 0 all videos will be downloaded.
 Duration is taken into account only when the API tries to actually download the file, not for initial RSS request.
 
+You can control format of downloaded file through optional `VIDEO_FORMAT` environment variable.
+If it's not set then the best available format is used (which might depend on whether `ffmpeg`) is installed.
+You can find more information regarding available video formats on [yt-dlp GitHub page](https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#format-selection)
+
+
 ### Docker compose
 
 1. Create `.env` file with `RSS_BRIDGE_URL` environment variable set
