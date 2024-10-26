@@ -5,10 +5,7 @@ services:
     container_name: rss-bridge-youtube
     restart: unless-stopped
     env_file: .env
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "100m"
+
 networks:
   default:
     name: rss-bridge-youtube-network
