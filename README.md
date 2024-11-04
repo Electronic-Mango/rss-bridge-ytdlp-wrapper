@@ -63,6 +63,7 @@ API has an automatically generated documentation at `docs` or `redoc` endpoints.
 |------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------|
 | `download` | `video_url` - URL passed to `yt-dlp` to download.                                                                                                                           | Downloaded file |
 | `rss`      | All query parameters normally passed to RSS-Bridge.<br/>`remove_existing_media` - allows specifying whether existing media should be removed from RSS, defaults to `False`. | RSS feed as XML |
+| `shorts`   | Same as `rss`, but responding only with YouTube shorts.<br/>**Item is classified as a short if it has `#short` string in title or description**.                            | Same as `rss`   |
 
 
 
