@@ -1,13 +1,13 @@
 from os import getenv
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 from uuid import uuid4
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
-from fastapi.responses import FileResponse, PlainTextResponse
+from fastapi.responses import FileResponse, PlainTextResponse, Response
 from httpx import URL, get
-from lxml.etree import SubElement, fromstring, strip_elements, tostring
+from lxml.etree import Element, SubElement, fromstring, strip_elements, tostring
 from starlette.background import BackgroundTask
 from yt_dlp import YoutubeDL, match_filter_func
 
@@ -23,24 +23,52 @@ app = FastAPI()
 
 @app.get("/rss")
 def rss(request: Request, remove_existing_media: bool = False):
+    return handle_rss(request, remove_existing_media)
+
+
+@app.get("/shorts")
+def shorts(request: Request, remove_existing_media: bool = False):
+    return handle_rss(request, remove_existing_media, shorts_filter)
+
+
+def handle_rss(
+    request: Request,
+    remove_existing_media: bool,
+    remove_entries_filter: Callable[[Element], bool] = None,
+) -> Response:
     params = dict(request.query_params) | {"format": "Mrss"}
     params.pop("remove_existing_media", None)
     bridge_response = get(RSS_BRIDGE_URL, params=params)
     rss_text = bridge_response.text.encode(ENCODING)
-    extended_response = insert_media(rss_text, remove_existing_media, request.base_url)
-    return PlainTextResponse(extended_response)
+    rss_tree = fromstring(rss_text)
+    filter_entries(rss_tree, remove_entries_filter)
+    insert_media(rss_tree, remove_existing_media, request.base_url)
+    response = tostring(rss_tree, xml_declaration=True, pretty_print=True, encoding=ENCODING)
+    return PlainTextResponse(response)
 
 
-def insert_media(xml: bytes, remove_existing_media: bool, base_url: URL) -> str:
+def filter_entries(tree: Element, remove_entries_filter: Callable[[Element], bool] | None) -> None:
+    if not remove_entries_filter:
+        return
+    for item in tree.xpath("//item"):
+        if remove_entries_filter(item):
+            item.getparent().remove(item)
+
+
+def shorts_filter(item: Element) -> bool:
+    title = item.find("title").text
+    description = item.find("description").text
+    return "#short" not in f"{title} {description}".lower()
+
+
+def insert_media(tree: Element, remove_existing_media: bool, base_url: URL) -> None:
     download_url = base_url.replace(path="/download")
-    tree = fromstring(xml)
     media_namespace = (tree.nsmap or {}).get("media", "http://search.yahoo.com/mrss/")
     if remove_existing_media:
         strip_elements(tree, f"{{{media_namespace}}}content")
     for item in tree.xpath("//item"):
         item_download_url = download_url.include_query_params(video_url=item.find("link").text)
         SubElement(item, f"{{{media_namespace}}}content", {"url": str(item_download_url)})
-    return tostring(tree, xml_declaration=True, pretty_print=True, encoding=ENCODING)
 
 
 @app.get("/download")
