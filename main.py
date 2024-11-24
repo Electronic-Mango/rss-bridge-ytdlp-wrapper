@@ -25,7 +25,7 @@ app = FastAPI()
 def rss(request: Request, remove_existing_media: bool = False):
     params = dict(request.query_params) | {"format": "Mrss"}
     params.pop("remove_existing_media", None)
-    bridge_response = get(RSS_BRIDGE_URL, params=params)
+    bridge_response = get(RSS_BRIDGE_URL, params=params, timeout=60.0)
     rss_text = bridge_response.text.encode(ENCODING)
     extended_response = insert_media(rss_text, remove_existing_media, request.base_url)
     return PlainTextResponse(extended_response)
