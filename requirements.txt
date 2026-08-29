@@ -2,4 +2,4 @@ fastapi[standard]~=0.136.0
 httpx~=0.28.1
 lxml~=6.1.0
 python-dotenv~=1.2.2
-yt-dlp~=2026.3.17
+yt-dlp[default]~=2026.8.19
