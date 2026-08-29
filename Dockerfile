@@ -1,5 +1,6 @@
 FROM python:3.12-alpine
 
+COPY --from=denoland/deno:bin /deno /usr/local/bin/deno
 RUN apk add ffmpeg
 
 WORKDIR /app
